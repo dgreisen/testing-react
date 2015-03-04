@@ -4,6 +4,7 @@ var argv = require('yargs').argv;
 var fs = require('fs');
 var order = require("gulp-order");
 var merge = require('merge-stream');
+var async = require('async');
 
 
 function load_manifest(file_name, callback) {
@@ -16,6 +17,9 @@ function load_manifest(file_name, callback) {
       var manifest = JSON.parse(data);
     } catch (e) {
       throw Error('invalid json in ' + file_name + ' manifest.');
+    }
+    if (file_name !== manifest.name) {
+      throw Error('invalid bower.json: name "' + manifest.name + '" not equal to manifest name "' + file_name + '".' )
     }
     for (typ in (manifest.include || {})) {
       var new_paths = [];
@@ -52,28 +56,31 @@ function build_initial_pipe(manifest, initial_pipelines, middle_pipeline) {
 }
 
 
+function load_manifests(callback) {
+  // handle_manifest called once for each manifest function(err, manifest)
+
+  get_manifest_paths(function(err, manifest_names) {
+    if (err) {
+      callback(err);
+    }
+    async.map(manifest_names, load_manifest, callback);
+  });
+}
+
 function build(extension, initial_pipelines, middle_pipeline) {
   return function(end) {
-    get_manifest_paths(function (err, file_names) {
-      var count = file_names.length;
-      file_names.forEach(function(file_name) {
-        load_manifest(file_name, function(err, manifest){
-          if (err) {
-            throw err;
-          }
-          return build_initial_pipe(manifest, initial_pipelines, middle_pipeline)
-            .pipe(order(get_ordered_paths(manifest, initial_pipelines), {base: '.'}))
-            .pipe(concat(file_name  + '.' + extension))
-            .pipe(gulp.dest('./build/' + extension + '/'))
-            .on('end', function() {
-              console.log('count', count);
-              if (--count <= 0) {
-                return end();
-              }
-            })
-        });
-      })
-    })
+    load_manifests(function(err, manifests){
+      if (err) {
+        return end(err);
+      }
+      async.each(manifests, function(manifest, callback) {
+        return build_initial_pipe(manifest, initial_pipelines, middle_pipeline)
+          .pipe(order(get_ordered_paths(manifest, initial_pipelines), {base: '.'}))
+          .pipe(concat(manifest.name  + '.' + extension))
+          .pipe(gulp.dest('./build/' + extension + '/'))
+          .on('end', callback);
+      }, end)
+    });
   }
 }
 
@@ -98,4 +105,5 @@ function get_manifest_paths(callback) {
 
 module.exports = {
   build: build,
+  load_manifests: load_manifests,  
 }

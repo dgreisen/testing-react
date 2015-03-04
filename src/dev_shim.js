@@ -80,8 +80,10 @@ function add_jsx(paths, base_static_path, callback) {
     nanoajax.ajax(path, function (code, responseText) {
       var transform = function() {
         if (typeof window.JSXTransformer !== 'undefined') {
-          var code = responseText.replace(/^.*require\(.*\).*$/mg, '')
-          JSXTransformer.exec(code);
+          var jsx_code = responseText.replace(/^.*require\(.*\).*$/mg, '')
+          var js_code = JSXTransformer.transform(jsx_code).code;
+          console.log(js_code);
+          eval(js_code);
           if (--count <= 0) {return callback()}
         } else {
           setTimeout(transform, 10);

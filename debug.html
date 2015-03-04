@@ -10,7 +10,8 @@ It uses the dev_shim to pull in each individual js and css file.</p>
 <p>You can optionally call window.patch_jquery(). 
 To ensure that any calls to $(function() {}) won't run until all dev scripts have downloaded. 
 If you choose to do this, the dev_shim must load jquery.</p>
-
+<hr />
+<div id="react-app"></div>
 <script src="./src/dev_shim.js"></script>
 <script>
 window.load_manifests(["example"], '')

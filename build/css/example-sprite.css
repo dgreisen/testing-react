@@ -1,0 +1,22 @@
+.icon {
+  background-image: url('../img/example.png');
+}
+
+.icon-test2 {
+  background-position: -4px -4px;
+  width: 140px;
+  height: 40px;
+}
+
+.icon-test1 {
+  background-position: -4px -52px;
+  width: 100px;
+  height: 100px;
+}
+
+.icon-test3 {
+  background-position: -4px -160px;
+  width: 80px;
+  height: 130px;
+}
+
