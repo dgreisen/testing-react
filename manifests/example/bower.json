@@ -21,11 +21,16 @@
     , {"path": "dependencies/react/JSXTransformer.js", "dev": true}
     , "src/copyright.min.js"
     ]
-  , "jsx": 
+  , "jsx":
     [ "src/example/CheckboxWithLabel.js"
+    , "src/example/Image.js"
+    , "src/example/Example.js"
     ]
   , "css":
-    [
+    [ "build/css/example-sprite.css"
+    ]
+  , "img":
+    [ "src/example/*.png"
     ]
   }
 }

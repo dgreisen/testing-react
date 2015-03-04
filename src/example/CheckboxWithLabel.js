@@ -29,3 +29,7 @@ var CheckboxWithLabel = React.createClass({
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = CheckboxWithLabel;
 }
+
+if (typeof window !== 'undefined') {
+  window.CheckboxWithLabel = CheckboxWithLabel;
+}
