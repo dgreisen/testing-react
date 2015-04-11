@@ -103,10 +103,10 @@ function get_manifest_paths(callback) {
   }
 }
 
-
 function install_deps(end) {
   return get_manifest_paths(function(err, manifest_paths) {
-    var install = function(manifest_path, callback) {
+    var install = function(manifest_name, callback) {
+      manifest_path = './manifests/' + manifest_name
       return exec('bower install', {cwd: manifest_path}, callback);
     }
     async.map(manifest_paths, install, end);
@@ -116,6 +116,5 @@ function install_deps(end) {
 module.exports = {
   build: build,
   load_manifests: load_manifests,
-  instal_deps: install_deps
+  install_deps: install_deps
 }
-

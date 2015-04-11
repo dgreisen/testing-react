@@ -1,3 +1,4 @@
+/*! (c) 2015 | Apache 2.0 licensed */
 /** @jsx React.DOM */
 if (typeof module !== 'undefined' && module.exports) {
   var React = require('react/addons');

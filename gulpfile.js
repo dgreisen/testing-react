@@ -16,7 +16,7 @@ var css_initial_pipes = {
   css: null,
 }
 
-var js_middle_pipes = lazypipe().pipe(function() {return gulpif(is_uncompressed, uglify());})
+var js_middle_pipes = lazypipe().pipe(function() {return gulpif(is_uncompressed, uglify({'preserveComments':'some'}));})
 
 
 gulp.task('build_styles', utils.build('css', css_initial_pipes));
@@ -51,5 +51,5 @@ gulp.task('install_deps', utils.install_deps)
 
 
 function is_uncompressed(file) {
-  return file.path.indexOf('.min.') < 0;
+  return file.path.indexOf('min.') < 0;
 }
