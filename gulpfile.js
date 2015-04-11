@@ -47,6 +47,8 @@ function build_imgs(end) {
   });
 }
 
+gulp.task('install_deps', utils.install_deps)
+
 
 function is_uncompressed(file) {
   return file.path.indexOf('.min.') < 0;

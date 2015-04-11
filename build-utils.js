@@ -5,7 +5,7 @@ var fs = require('fs');
 var order = require("gulp-order");
 var merge = require('merge-stream');
 var async = require('async');
-
+var exec = require('child_process').exec;
 
 function load_manifest(file_name, callback) {
   file_path = './manifests/' + file_name + '/bower.json';
@@ -103,7 +103,19 @@ function get_manifest_paths(callback) {
   }
 }
 
+
+function install_deps(end) {
+  return get_manifest_paths(function(err, manifest_paths) {
+    var install = function(manifest_path, callback) {
+      return exec('bower install', {cwd: manifest_path}, callback);
+    }
+    async.map(manifest_paths, install, end);
+  })
+}
+
 module.exports = {
   build: build,
-  load_manifests: load_manifests,  
+  load_manifests: load_manifests,
+  instal_deps: install_deps
 }
+
