@@ -82,7 +82,6 @@ function add_jsx(paths, base_static_path, callback) {
         if (typeof window.JSXTransformer !== 'undefined') {
           var jsx_code = responseText.replace(/^.*require\(.*\).*$/mg, '')
           var js_code = JSXTransformer.transform(jsx_code).code;
-          console.log(js_code);
           eval(js_code);
           if (--count <= 0) {return callback()}
         } else {
@@ -116,11 +115,16 @@ function load_manifest(file_name, base_static_path, callback){
 }
 
 function load_manifests(file_names, base_static_path, callback) {
+  var hide_body_style = document.createElement('style');
+  hide_body_style.innerHTML = "body{display:none;}";
+  document.head.appendChild(hide_body_style);
+
   var count = file_names.length;
   if (!count) {callback(); return dom_elms;}
   file_names.forEach(function(file_name) {
     load_manifest(file_name, base_static_path, function() {
       if (--count <= 0) {
+        hide_body_style.remove();
         if (callback) {callback();}
         return handle_onload()
       }
