@@ -11,7 +11,7 @@
     "bower_components"
   ],
   "dependencies": {
-    "react": "~0.13.1",
+    "react": "~0.13.2",
     "jquery": "1.11.2"
   },
   "include": {
