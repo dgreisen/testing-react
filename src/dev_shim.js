@@ -36,31 +36,27 @@ function add_stylesheet(path, type, callback){
 
 function add_scripts(type) {
   return function(paths, base_static_path, callback){
-    var i = 0;
-    var count = paths.length;
-
-    var handle_add = function() {
-      if (i >= count) {
-        return callback();
-      }
-      var path = get_path(base_static_path, paths[i++]);
-      add_script(path, type, handle_add);
-      
-    }
-    handle_add();
+    async.each(
+      paths,
+      function(raw_path, callback) {
+        var path = get_path(base_static_path, raw_path);
+        add_script(path, type, callback)
+      },
+      callback
+    )
   }
 }
 
 function add_stylesheets(type) {
-  return function(paths, base_static_path, callback){
-    var dom_elms = [];
-    var count = paths.length;
-    if (!count) {callback(); return dom_elms;}
-    for(var i=0,j=paths.length;i<j;i++){
-      var path = get_path(base_static_path, paths[i]);
-      dom_elms.push(add_stylesheet(path, type, function() {if (--count <= 0) {return callback()}}));
-    }
-    return dom_elms;
+  return function(paths, base_static_path, callback) {
+    async.each(
+      paths,
+      function(raw_path, callback) {
+        var path = get_path(base_static_path, raw_path);
+        add_stylesheet(path, type, callback)
+      },
+      callback
+    )
   }
 }
 
@@ -73,24 +69,26 @@ function find_script_that_contains(text){
 }
 
 function add_jsx(paths, base_static_path, callback) {
-  var count = paths.length;
-  if (!count) {callback(); return dom_elms;}
-  for(var i=0,j=paths.length;i<j;i++){
-    var path = get_path(base_static_path, paths[i]);
-    nanoajax.ajax(path, function (code, responseText) {
-      var transform = function() {
-        if (typeof window.JSXTransformer !== 'undefined') {
-          var jsx_code = responseText.replace(/^.*require\(.*\).*$/mg, '')
-          var js_code = JSXTransformer.transform(jsx_code).code;
-          eval(js_code);
-          if (--count <= 0) {return callback()}
-        } else {
-          setTimeout(transform, 10);
+  async.each(
+    paths,
+    function(raw_path, callback) {
+      var path = get_path(base_static_path, raw_path);
+      nanoajax.ajax(path, function (code, responseText) {
+        var transform = function() {
+          if (typeof window.JSXTransformer !== 'undefined') {
+            var jsx_code = responseText.replace(/^.*require\(.*\).*$/mg, '')
+            var js_code = JSXTransformer.transform(jsx_code).code;
+            eval(js_code);
+            callback();
+          } else {
+            setTimeout(transform, 10);
+          }
         }
-      }
-      transform();
-    });
-  }
+        transform();
+      })
+    },
+    callback
+  )
 }
 
 // file type definitions
@@ -103,14 +101,17 @@ add_type = {
 function load_manifest(file_name, base_static_path, callback){
   nanoajax.ajax(base_static_path + "manifests/" + file_name + "/bower.json", function (code, responseText) {
     var manifest = JSON.parse(responseText);
-    var types = manifest.include || {};
-    var count = 0;
-    for (type in types) {count++;}
-    for (type in types) {
-      var paths = manifest.include[type];
-      if (!add_type[type]) {continue;}
-      add_type[type](paths, base_static_path, function() {if (--count <= 0) {return callback()}});
-    }
+    var types = []
+    for (type in manifest.include || {}) {types.push(type);}
+    async.each(
+      types,
+      function(type, callback) {
+        var paths = manifest.include[type];
+        if (!add_type[type]) {return callback();}
+        add_type[type](paths, base_static_path, callback);
+      },
+      callback
+    )
   })
 }
 
@@ -119,17 +120,17 @@ function load_manifests(file_names, base_static_path, callback) {
   hide_body_style.innerHTML = "body{display:none;}";
   document.head.appendChild(hide_body_style);
 
-  var count = file_names.length;
-  if (!count) {callback(); return dom_elms;}
-  file_names.forEach(function(file_name) {
-    load_manifest(file_name, base_static_path, function() {
-      if (--count <= 0) {
-        hide_body_style.remove();
-        if (callback) {callback();}
-        return handle_onload()
-      }
-    });
-  });
+  async.each(
+    file_names,
+    function(file_name, callback) {
+      load_manifest(file_name, base_static_path, callback)
+    },
+    function() {
+      hide_body_style.remove();
+      handle_onload()
+      if (callback) {callback();}
+    }
+  )
 }
 
 window.load_manifests = load_manifests;
@@ -158,5 +159,49 @@ function handle_onload() {
     })
   }
 }
+
+// from https://github.com/caolan/async (MIT License)
+
+var _each = function (arr, iterator) {
+    if (arr.forEach) {
+        return arr.forEach(iterator);
+    }
+    for (var i = 0; i < arr.length; i += 1) {
+        iterator(arr[i], i, arr);
+    }
+};
+
+function only_once(fn) {
+    var called = false;
+    return function() {
+        if (called) throw new Error("Callback was already called.");
+        called = true;
+        fn.apply(this, arguments);
+    }
+}
+
+async = {};
+async.each = function (arr, iterator, callback) {
+    callback = callback || function () {};
+    if (!arr.length) {
+        return callback();
+    }
+    var completed = 0;
+    _each(arr, function (x) {
+        iterator(x, only_once(done) );
+    });
+    function done(err) {
+      if (err) {
+          callback(err);
+          callback = function () {};
+      }
+      else {
+          completed += 1;
+          if (completed >= arr.length) {
+              callback();
+          }
+      }
+    }
+};
 
 })();

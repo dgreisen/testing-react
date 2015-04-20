@@ -6,10 +6,18 @@ Installation
 * `npm install -g jest-cli`
 * `npm install .`
 
+Usage
+-----
+run `gulp help` to see all available commands.
+
 Testing
 -------
 
 * `npm test`
+
+While testing-react is set up to allow for coffeescript testing,
+coffee-react is currently segfaulting.
+You should write your tests with javascript for the time being.
 
 Developing
 ----------
@@ -30,11 +38,13 @@ To create a new set of javascript and css files:
     }
 
 * use the shim at src/dev_shim to seemlessly import all constituent files during development
+* or, easier, use the debug.html (development) and index.html (production) pages to test your code
 * development files must be served by a webserver. 
-  You can use `python -m SimpleHTTPServer 8000` to do so.
+  You can run `gulp runtestserver` to run a simpleHTTPServer on port 8765.
 
 Build
 -----
+*
 * run `gulp` to build the minified files in the `./build` directory.
 
 
